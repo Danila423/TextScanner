@@ -2,7 +2,6 @@ import httpx, pytest, uuid
 
 BASE = "http://localhost:8000"
 
-
 @pytest.mark.asyncio
 async def test_duplicate(tmp_path):
     p = tmp_path / "same.txt"

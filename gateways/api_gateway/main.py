@@ -11,7 +11,7 @@ app = FastAPI(
 )
 
 
-# ---------- загрузка отчёта --------------------------------------------------
+
 @app.post("/reports", status_code=201)
 async def upload_report(file: UploadFile = File(...)):
     async with httpx.AsyncClient() as client:
@@ -23,7 +23,7 @@ async def upload_report(file: UploadFile = File(...)):
     return resp.json()  # {"id": ...}
 
 
-# ---------- анализ -----------------------------------------------------------
+
 @app.get("/reports/{rid}")
 async def get_analysis(rid: str):
     async with httpx.AsyncClient() as client:
@@ -33,7 +33,7 @@ async def get_analysis(rid: str):
     return resp.json()
 
 
-# ---------- получить сам файл -------------------------------------------------
+
 @app.get("/files/{rid}", response_class=Response, responses={404: {"model": None}})
 async def get_file(rid: str):
     async with httpx.AsyncClient() as client:

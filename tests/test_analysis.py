@@ -2,7 +2,6 @@ import httpx, pytest, time, uuid
 
 BASE = "http://localhost:8000"
 
-
 @pytest.mark.asyncio
 async def test_not_found():
     async with httpx.AsyncClient() as c:
