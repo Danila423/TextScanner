@@ -1,0 +1,70 @@
+openapi: 3.0.0
+info:
+  title: File Storing Service
+  version: 1.0.0
+  description: |
+    Сохраняет *.txt* и метаданные. Выдаёт id существующего файла,
+    если пришёл абсолютный дубликат (сравнение sha-256).
+servers:
+  - url: http://filestore:8000
+paths:
+  /files:
+    post:
+      summary: Сохранить файл
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Создан или найден
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UploadResponse' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /files/{id}:
+    get:
+      summary: Получить файл по id
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Файл
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: binary
+        default: { $ref: '#/components/responses/Error' }
+
+components:
+  parameters:
+    IdParam:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    UploadResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+  responses:
+    Error:
+      description: Ошибка
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail: { type: string }

@@ -1,0 +1,69 @@
+version: "3.9"
+
+services:
+
+  # ────────────────────────────── Gateway ──────────────────────────────
+  gateway:
+    build: ./gateways/api_gateway
+    environment:
+      - FILESTORE_URL=http://filestore:8000
+      - ANALYSIS_URL=http://analysis:8000
+    ports:
+      - "8000:8000"            # внешний порт
+    depends_on:
+      filestore:
+        condition: service_started
+      analysis:
+        condition: service_started
+    restart: unless-stopped
+
+  # ─────────────────────────── File Storing ────────────────────────────
+  filestore:
+    build: ./filestore
+    environment:
+      - DB_DSN=postgresql://postgres:postgres@db:5432/postgres
+      - STORAGE_PATH=/store
+    volumes:
+      - filestore-data:/store
+    ports:
+      - "8001:8000"            # Swagger будет на localhost:8001/docs
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ─────────────────────────── File Analysis ───────────────────────────
+  analysis:
+    build: ./analysis
+    environment:
+      - DB_DSN=postgresql://postgres:postgres@db:5432/postgres
+      - FILESTORE_URL=http://filestore:8000
+      - WORD_CLOUD_ENDPOINT=https://quickchart.io/wordcloud
+    ports:
+      - "8002:8000"            # Swagger будет на localhost:8002/docs
+    depends_on:
+      db:
+        condition: service_healthy
+      filestore:
+        condition: service_started
+    restart: unless-stopped
+
+  # ────────────────────────────── Postgres ─────────────────────────────
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+
+# ─────────────────────────────── volumes ───────────────────────────────
+volumes:
+  pgdata:
+  filestore-data:

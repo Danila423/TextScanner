@@ -1,0 +1,94 @@
+openapi: 3.0.0
+info:
+  title: API Gateway
+  version: 1.0.0
+  description: |
+    Единая входная точка. Только маршрутизация:
+      • загрузка отчёта  
+      • получение результатов анализа  
+      • скачивание исходного файла
+servers:
+  - url: http://localhost:8000
+paths:
+  /reports:
+    post:
+      summary: Загрузить отчёт (*.txt*)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Файл принят
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UploadResponse' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /reports/{id}:
+    get:
+      summary: Получить результаты анализа
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: JSON со статистикой
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AnalysisResponse' }
+        default: { $ref: '#/components/responses/Error' }
+
+  /files/{id}:
+    get:
+      summary: Скачать исходный .txt
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Файл
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: binary
+        default: { $ref: '#/components/responses/Error' }
+
+components:
+  parameters:
+    IdParam:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    UploadResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+    AnalysisResponse:
+      type: object
+      properties:
+        id:            { type: string, format: uuid }
+        paragraphs:    { type: integer, example: 4 }
+        words:         { type: integer, example: 350 }
+        chars:         { type: integer, example: 2100 }
+        duplicate_of:  { type: string, format: uuid, nullable: true }
+        cloud_url:     { type: string, format: uri, nullable: true }
+  responses:
+    Error:
+      description: Ошибка
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail: { type: string }

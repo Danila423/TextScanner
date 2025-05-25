@@ -1,0 +1,52 @@
+openapi: 3.0.0
+info:
+  title: File Analysis Service
+  version: 1.0.0
+  description: |
+    Вычисляет: кол-во абзацев, слов, символов; проверяет на 100 % дубликат;
+    при наличии настроенной переменной WORD_CLOUD_ENDPOINT
+    формирует URL картинки облака слов.
+servers:
+  - url: http://analysis:8000
+paths:
+  /analysis/{id}:
+    get:
+      summary: Выполнить (или вернуть кэш) анализа по id файла
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Результаты анализа
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AnalysisResponse' }
+        default: { $ref: '#/components/responses/Error' }
+
+components:
+  parameters:
+    IdParam:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    AnalysisResponse:
+      type: object
+      properties:
+        id:           { type: string, format: uuid }
+        paragraphs:   { type: integer }
+        words:        { type: integer }
+        chars:        { type: integer }
+        duplicate_of: { type: string, format: uuid, nullable: true }
+        cloud_url:    { type: string, format: uri, nullable: true }
+  responses:
+    Error:
+      description: Ошибка
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail: { type: string }
